@@ -1,0 +1,38 @@
+{% extends "site.html" %}
+{% block title %}
+Tabelle mit dpa-Live-Einbindungen herunterladen
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="row">
+  <div class="col-md-6">
+        <h1>Tabelle mit dpa-Live-Einbindungen herunterladen</h1>
+        {{ wtf.quick_form(form,button_map={"submit" : "primary" }) }}
+        <br/>
+        {% if response %}
+        <div class="alert alert-{{response.class}}" role="alert">
+			{{ response.text }}
+       </div>
+       {% endif %}
+  </div>
+</div>
+{% if table %}
+<div class="row">
+	<div class="col-md-12">
+		<p><i>Die Tabelle unten lässt sich per Copy &amp; Paste in Excel übertragen.</i> <button onClick="$('textarea').select()" type="button">Ganze Tabelle markieren</button>, dann CTRL+C</p>
+		<textarea style="width: 100%; height: 90px" readonly>{{ atable }}</textarea>
+		<h2>{{ table.title }}</h2>
+		<table class="table">
+		<thead>
+		  <td><b>{{ table.header | join("</b></td><td><b>") | safe }} </b></td>
+		</thead>
+		{% for r in table.data %}
+			<tr><td>{{ r | join("</td><td>") | safe }} </td></tr>
+		{% endfor %}
+		</table>
+	</div>
+</div>
+{% endif %}
+</div>
+{% endblock %}
