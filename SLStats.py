@@ -164,11 +164,11 @@ class SLStats(object) :
 
 
 if __name__ == '__main__' : 
-	b=SLStats(user='mvirtel@dpa-newslab.com',password="")
+	from credentials import login
+	b=SLStats(**login)
 	import pprint
 	l=b.events()
 	# print l[0],":",b.id_for_event(l[2])
 	pprint.pprint(b.table(l[2]))
 	pprint.pprint(b.syndication(l[2]))	
-	STOP
 	
