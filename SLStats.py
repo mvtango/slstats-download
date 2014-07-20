@@ -71,12 +71,15 @@ class SLStats(object) :
 			# print "getting %s" % repr(bdict)
 			req=self._browser.open(apiurl % bdict)
 			r=req.get_data()
-			o=json.loads(r[r.find("({")+1:-1])
+			o=json.loads(r[r.find("(")+1:-1])
 			if req.code==200 :
-				if not "Sources" in m or len(m["Sources"])==0 :
-					m.update(o)
+				if hasattr(o,"has_key") :
+					if not "Sources" in m or len(m["Sources"])==0 :
+						m.update(o)
+					else :
+						m["Sources"].extend(o["Sources"])
 				else :
-					m["Sources"].extend(o["Sources"])
+					m["data"]=o
 				return m
 			for k in bdict.keys() :
 				bdict[k]=o.get(k,"")
@@ -84,15 +87,27 @@ class SLStats(object) :
 
 
 
+	def from_endpoint(self,endpoint,id_or_url) :
+		eid=self.normalize_eventid(id_or_url)
+		return self.get_from_endpoint(endpoint % eid)
+
 	def origin(self,eventid) :
-		eid=self.normalize_eventid(eventid)
-		return self.get_from_endpoint("metrics/%s/origin/total" % eid)
+		""" Referrer """
+		return self.from_endpoint("metrics/%s/origin/total", eventid)
 
 
 	def syndication(self,eventid) :
-		eid=self.normalize_eventid(eventid)
-		return self.get_from_endpoint("metrics/%s/syndication" % eid)
+		""" Syndizierte Nutzer """
+		return self.from_endpoint("metrics/%s/syndication", eventid)
 
+	def totalreport(self,eventid) :
+		""" Summe von Allem """
+		return self.from_endpoint("metrics/%s/totalreport", eventid)
+
+	
+	def timeline(self,eventid,ttype) :
+		return self.from_endpoint("metrics/%%s/%s/-6/168h" % ttype, eventid)
+	
 	
 	def events(self) :
 		self.login()
@@ -117,9 +132,9 @@ class SLStats(object) :
 		for tr in o['MetricList'] :
 			data.append([tr[k] for k in header])
 		return(dict(title=o["title"],header=header,data=data))
-			
-		
-	def table(self,eventid) :
+
+
+	def consolidated_sources(self,eventid) :
 		data=self.origin(eventid)
 
 
@@ -155,11 +170,20 @@ class SLStats(object) :
 				do_reduce(m)
 			except Exception, e:
 				print "EXCEPTION ",n,m,e
+				
+		data["consolidated"]=db
+		return data
+
+
+			
+		
+	def table(self,eventid) :
+		data=self.consolidated_sources(eventid)
 
 
 		return dict(title="%s [%s]" % (unicode(data["title"],"utf-8"),eventid),
 					header=['kunde','watchersum','unique','domains'], 
-					data=[(v.get("host",""),v.get("watcherssum",0), v.get("uniques",0), ", ".join(v.get("urls",[]))) for v in db.values() ]
+					data=[(v.get("host",""),v.get("watcherssum",0), v.get("uniques",0), ", ".join(v.get("urls",[]))) for v in data["consolidated"].values() ]
 				   )
 
 
@@ -167,8 +191,14 @@ if __name__ == '__main__' :
 	from credentials import login
 	b=SLStats(**login)
 	import pprint
-	l=b.events()
+	for e in b.events() :
+		eid=b.id_for_event(e)
+		print "data['%s']=%s" % (eid, pprint.pformat(dict(embed=b.consolidated_sources(eid)["consolidated"].values(),
+		                   synd=b.syndication(eid)["MetricList"],
+		                   tot=b.totalreport(eid))))
 	# print l[0],":",b.id_for_event(l[2])
-	pprint.pprint(b.table(l[2]))
-	pprint.pprint(b.syndication(l[2]))	
-	
+	#pprint.pprint(b.table(l[2]))
+	#pprint.pprint(b.syndication(l[2]))	
+	#pprint.pprint(b.from_endpoint("metrics/%s/totalreport",l[2]))
+	#pprint.pprint(b.timeline(l[2],"watchers"))
+	#pprint.pprint(b.timeline(l[2],"engagementminutes"))
