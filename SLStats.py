@@ -195,7 +195,9 @@ if __name__ == '__main__' :
 		eid=b.id_for_event(e)
 		print "data['%s']=%s" % (eid, pprint.pformat(dict(embed=b.consolidated_sources(eid)["consolidated"].values(),
 		                   synd=b.syndication(eid)["MetricList"],
-		                   tot=b.totalreport(eid))))
+		                   tot=b.totalreport(eid),
+				   tl=dict([(a,b.timeline(eid,a)) for a in ("watchers","uniques","engagementminutes","pageviews")])
+					)))
 	# print l[0],":",b.id_for_event(l[2])
 	#pprint.pprint(b.table(l[2]))
 	#pprint.pprint(b.syndication(l[2]))	
