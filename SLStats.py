@@ -8,6 +8,7 @@ import urlparse
 import re,string
 from collections import OrderedDict
 import datetime
+from memoize import memoized 
 
 class StatsNotAuthorized(Exception) :
 	pass
@@ -21,6 +22,7 @@ class SLStats(object) :
 	def login(self) :
 		try :
 			if (self._lastlogin!=0) and (datetime.datetime.now()-self._lastlogin).seconds<30 :
+				self._lastlogin=datetime.datetime.now()
 				return
 			else :
 				r=self._browser.open("https://client.scribblelive.com/")
@@ -45,6 +47,7 @@ class SLStats(object) :
 			self._credentials=kwargs
 		
 
+	@memoized
 	def normalize_eventid(self,id_or_url) :
 		self.login()
 		if not re.match(r"\d+",id_or_url) :
@@ -52,7 +55,7 @@ class SLStats(object) :
 		return id_or_url
 
 
-
+	@memoized
 	def get_from_endpoint(self,endpoint) :
 		eventid=re.findall(r"\d+",endpoint)[0]	
 		r=self._browser.open("https://client.scribblelive.com/client/Reports.aspx?id=%s" % eventid) 
@@ -96,6 +99,10 @@ class SLStats(object) :
 		return self.from_endpoint("metrics/%s/origin/total", eventid)
 
 
+	def basic(self,eventid) :
+		""" Basic Metrics """
+		return self.from_endpoint("metrics/%s/basic", eventid)
+
 	def syndication(self,eventid) :
 		""" Syndizierte Nutzer """
 		return self.from_endpoint("metrics/%s/syndication", eventid)
@@ -105,8 +112,16 @@ class SLStats(object) :
 		return self.from_endpoint("metrics/%s/totalreport", eventid)
 
 	
-	def timeline(self,eventid,ttype) :
-		return self.from_endpoint("metrics/%%s/%s/-6/168h" % ttype, eventid)
+	def timeline(self,eventid,ttype,start="-6",timeframe="168h") :
+		if hasattr(start,"strftime") :
+			fstart=start.strftime("%s")
+		else :
+			fstart=start
+		r=self.from_endpoint("metrics/%%s/%s/%s/%s" % (ttype,fstart,timeframe), eventid)
+		if "Count" in r["data"][0] :
+			r["data"]=[{ "count" : a["Count"], "time" : datetime.datetime.fromtimestamp(a["Time"]) } for a in r["data"]]
+		return r
+		#return self.from_endpoint("metrics/%%s/%s/" % ttype, eventid)
 	
 	
 	def events(self) :
@@ -190,6 +205,7 @@ class SLStats(object) :
 if __name__ == '__main__' : 
 	from credentials import login
 	b=SLStats(**login)
+	STOP
 	import pprint
 	for e in b.events() :
 		eid=b.id_for_event(e)
