@@ -142,7 +142,7 @@ class SLStats(object) :
 
 	def syndicationtable(self,eventid) :
 		o=self.syndication(eventid)
-		header=['ClientName','Title','TotalPageViews','TotalUniquePageViews','TotalWatchers']
+		header=['ClientName','TotalPageViews','TotalUniquePageViews','TotalWatchers','Title']
 		data=[]
 		for tr in o['MetricList'] :
 			data.append([tr[k] for k in header])
@@ -155,7 +155,7 @@ class SLStats(object) :
 
 		def do_map(a) :
 			r={}
-			for c in ("Source","WatchersSum","Uniques") :
+			for c in ("Source","WatchersSum","Uniques","PageViews") :
 				r[string.lower(c)]=a[c]
 			u=urlparse.urlparse(r["source"])
 			us=u.netloc.split(".")
@@ -168,11 +168,11 @@ class SLStats(object) :
 
 		def do_reduce(a) :
 			if a["host"] not in db :
-				db[a["host"]]= { 'host' : a["host"], 'urls' : [], "watcherssum" : 0, "n" : 0, "uniques" : 0 }
+				db[a["host"]]= { 'host' : a["host"], 'urls' : [], "watcherssum" : 0, "n" : 0, "uniques" : 0, "pageviews" : 0 }
 			me=db[a["host"]]
 			if a["url"] not in me["urls"] :
 				me["urls"].append(a["url"])
-			for ss in ["watcherssum","uniques"] :
+			for ss in ["watcherssum","uniques","pageviews"] :
 				me[ss]=me[ss]+a[ss]
 			me["n"]=me["n"]+1
 
@@ -197,8 +197,8 @@ class SLStats(object) :
 
 
 		return dict(title="%s [%s]" % (unicode(data["title"],"utf-8"),eventid),
-					header=['kunde','watchersum','unique','domains'], 
-					data=[(v.get("host",""),v.get("watcherssum",0), v.get("uniques",0), ", ".join(v.get("urls",[]))) for v in data["consolidated"].values() ]
+					header=['kunde','pageviews','uniques','watchersum','domains'], 
+					data=[(v.get("host",""),v.get("pageviews",0),v.get("uniques",0), v.get("watcherssum",0), ", ".join(v.get("urls",[]))) for v in data["consolidated"].values() ]
 				   )
 
 
@@ -207,6 +207,7 @@ if __name__ == '__main__' :
 	b=SLStats(**login)
 	STOP
 	import pprint
+	pprint.pprint(b.events())
 	for e in b.events() :
 		eid=b.id_for_event(e)
 		print "data['%s']=%s" % (eid, pprint.pformat(dict(embed=b.consolidated_sources(eid)["consolidated"].values(),

@@ -1,4 +1,12 @@
 # coding: utf-8
+import sys
+
+#for p in ['.', '', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages/distribute-0.6.24-py2.7.egg', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages/pip-1.1-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7/site-packages/distribute-0.6.24-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7/site-packages/pip-1.1-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7', '/srv/scribble-stat/venv/lib/python2.7/plat-linux2', '/srv/scribble-stat/venv/lib/python2.7/lib-tk', '/srv/scribble-stat/venv/lib/python2.7/lib-old', '/srv/scribble-stat/venv/lib/python2.7/lib-dynload', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-linux2', '/usr/lib/python2.7/lib-tk', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages', '/srv/scribble-stat/venv/lib/python2.7/site-packages'] :
+#	if not p in sys.path :
+#		sys.path.append(p)
+
+# print sys.path
+
 
 from flask import Flask,render_template,request
 from flask_bootstrap import Bootstrap
@@ -22,7 +30,7 @@ Bootstrap(app)
 
 
 
-@app.route('/',methods=('GET','POST'))
+@app.route('/scribble/',methods=('GET','POST'))
 def get_result():
 	form=SubmitForm(request.form)
 	atable=""
