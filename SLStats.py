@@ -56,17 +56,26 @@ class SLStats(object) :
 
 
 	@memoized
-	def get_from_endpoint(self,endpoint) :
-		eventid=re.findall(r"\d+",endpoint)[0]	
-		r=self._browser.open("https://client.scribblelive.com/client/Reports.aspx?id=%s" % eventid) 
+	def get_auth_for_event(self,eventid) :
+		try :
+			r=self._browser.open("https://client.scribblelive.com/client/Reports.aspx?id=%s" % eventid) 
+ 		except (mechanize.HTTPError,mechanize.URLError) as e:
+			raise StatsNotAuthorized(eventid)
 		d=r.get_data()
 		try :
 			auth=re.search(r'Auth: "([^"]+)"',d).groups()[0]
 		except AttributeError :
 			""" Page contains no Auth Token -> Event is not accessible """
-			raise StatsNotAuthorized(endpoint)
+			raise StatsNotAuthorized(eventid)
 		m=re.search(r'<h2 class="page_title">(?P<title>[^<]+)',d)
 		m=m.groupdict() if m else {}
+		return(m,auth)
+
+
+	@memoized
+	def get_from_endpoint(self,endpoint) :
+		eventid=re.findall(r"\d+",endpoint)[0]	
+		(m,auth)=self.get_auth_for_event(eventid)
 		apiurl="https://apiv1secure.scribblelive.com/api/rest/%s?callback=jQuery191049792258255183697_1401883792306&Auth=%s&format=json&LastHashKey=%%(LastHashKey)s&LastRangeKey=%%(LastRangeKey)s&LastTime=%%(LastTime)s&LastSourceType=%%(LastSourceType)s" % (endpoint,auth)
 		bdict=dict(LastRangeKey="",LastHashKey="",LastTime="",LastSourceType="")
 		m["Sources"]=[]
@@ -87,7 +96,6 @@ class SLStats(object) :
 			for k in bdict.keys() :
 				bdict[k]=o.get(k,"")
 			m["Sources"].extend(o["Sources"])
-
 
 
 	def from_endpoint(self,endpoint,id_or_url) :
@@ -130,7 +138,7 @@ class SLStats(object) :
 		d=r.get_data()
 		return re.findall(r'href="(?P<url>https://client.scribblelive.com/Event/[^"]+)"',d)
 		
-	
+	@memoized	
 	def id_for_event(self,n) :
 		self.login()
 		try :
@@ -205,16 +213,20 @@ class SLStats(object) :
 if __name__ == '__main__' : 
 	from credentials import login
 	b=SLStats(**login)
-	STOP
 	import pprint
 	pprint.pprint(b.events())
 	for e in b.events() :
 		eid=b.id_for_event(e)
-		print "data['%s']=%s" % (eid, pprint.pformat(dict(embed=b.consolidated_sources(eid)["consolidated"].values(),
+		if eid :
+			print "# Event: %s" % eid
+			print "data['%s']=%s" % (eid, pprint.pformat(dict(embed=b.consolidated_sources(eid)["consolidated"].values(),
 		                   synd=b.syndication(eid)["MetricList"],
 		                   tot=b.totalreport(eid),
-				   tl=dict([(a,b.timeline(eid,a)) for a in ("watchers","uniques","engagementminutes","pageviews")])
+				   # tl=dict([(a,b.timeline(eid,a)) for a in ("watchers","uniques","engagementminutes","pageviews")])	
+				   basic=b.basic(eid)
 					)))
+		else :
+			print "# Event %s / %s " % (eid,e)
 	# print l[0],":",b.id_for_event(l[2])
 	#pprint.pprint(b.table(l[2]))
 	#pprint.pprint(b.syndication(l[2]))	
