@@ -61,7 +61,7 @@ Tabelle mit dpa-Live-Statistik herunterladen
 			{% for e in other %}
 				$e.append(new Option("{{ e|replace("https://client.scribblelive.com/Event/","") }}","{{e}}"));
 			{% endfor %}
-			$("#eventurl").on("change",function(e) { 
+			$("#eventurl").on("blur change",function(e) { 
 				$("#eventid").val($(this.options[this.selectedIndex]).val());
 			});
 		{% else %}
