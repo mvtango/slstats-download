@@ -1,5 +1,5 @@
 # coding: utf-8
-import sys
+import sys,traceback
 
 #for p in ['.', '', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages/distribute-0.6.24-py2.7.egg', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages/pip-1.1-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7/site-packages/distribute-0.6.24-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7/site-packages/pip-1.1-py2.7.egg', '/srv/scribble-stat/venv/lib/python2.7', '/srv/scribble-stat/venv/lib/python2.7/plat-linux2', '/srv/scribble-stat/venv/lib/python2.7/lib-tk', '/srv/scribble-stat/venv/lib/python2.7/lib-old', '/srv/scribble-stat/venv/lib/python2.7/lib-dynload', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-linux2', '/usr/lib/python2.7/lib-tk', '/srv/scribble-stat/venv/local/lib/python2.7/site-packages', '/srv/scribble-stat/venv/lib/python2.7/site-packages'] :
 #	if not p in sys.path :
@@ -54,7 +54,7 @@ def get_result():
 			atable.extend([";".join(["%s" % a for a in row]) for row in syndication["data"]])
 			atable="\r\n".join(atable)
 		except Exception, e:
-			response["text"]="Fehler beim Herunterladen {form.eventid.data} : {0}".format(repr(e),form=form)
+			response["text"]="Fehler beim Herunterladen {form.eventid.data} : {0} -- {exc} ".format(repr(e),form=form,exc=traceback.format_exc())
 			response["class"]="warning"
 			table={}
 	else :
