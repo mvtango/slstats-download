@@ -42,6 +42,11 @@ class SLStats(object) :
 	def __init__(self,**kwargs) :
 		br=mechanize.Browser()
 		br.addheaders = [('User-agent', kwargs.get('useragent','Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.117 Safari/537.36'))]
+		if "debug" in kwargs :
+			# Log HTTP response bodies (ie. the HTML, most of the time).
+			br.set_debug_responses(True)
+		# Print HTTP headers.
+			br.set_debug_http(True)
 		self._browser=br
 		if kwargs :
 			self._credentials=kwargs
@@ -66,7 +71,7 @@ class SLStats(object) :
 			auth=re.search(r'Auth: "([^"]+)"',d).groups()[0]
 		except AttributeError :
 			""" Page contains no Auth Token -> Event is not accessible """
-			raise StatsNotAuthorized(eventid)
+			raise StatsNotAuthorized("%s: %s" % (eventid,d))
 		m=re.search(r'<h2 class="page_title">(?P<title>[^<]+)',d)
 		m=m.groupdict() if m else {}
 		return(m,auth)
@@ -211,7 +216,11 @@ class SLStats(object) :
 
 
 if __name__ == '__main__' : 
+	import logging,sys
+	logging.basicConfig(file=sys.stderr, level=logging.DEBUG)
+	logging.debug("Halo")
 	from credentials import login
+	login.update(dict(debug=True))
 	b=SLStats(**login)
 	import pprint
 	pprint.pprint(b.events())
