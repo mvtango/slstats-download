@@ -35,13 +35,15 @@ class SLStats(object) :
                                         already_submitted[forms[0].action]=True
 					self._browser.submit()
                                         forms=[b for b in self._browser.forms()]
-					while len(forms)>0 and (forms[0] not in already_submitted) :
-                                                # print "Currently at {}, submitting Form 0 {}".format(self._browser.geturl(),forms[0].action)
+					while len(forms)>0 and (forms[0].action not in already_submitted) :
+                                                # print "Currently at {}, submitting Form 0 {} {}".format(self._browser.geturl(),forms[0].action,repr(already_submitted))
 						self._browser.select_form(nr=0)
                                                 already_submitted[forms[0].action]=True
 						self._browser.submit()
 						self._lastlogin=datetime.datetime.now()
                                                 forms=[b for b in self._browser.forms()]
+                        if len(forms)>0:
+                            raise StatsNotAuthorized()
 		#except Exception, e :
 		#	raise e
 		
