@@ -31,10 +31,13 @@ class SLStats(object) :
 					self._browser["ctl00$PageInfo$Email"]=self._credentials["user"]
 					self._browser["ctl00$PageInfo$Password"]=self._credentials["password"]
 					self._browser.submit()
-					if len([b for b in self._browser.forms()])>0 :
+                                        forms=[b for b in self._browser.forms()]
+					while len(forms)>0 :
+                                                print "Currently at {}, submitting Form 0 {}".format(self._browser.geturl(),forms[0].action)
 						self._browser.select_form(nr=0)
 						self._browser.submit()
 						self._lastlogin=datetime.datetime.now()
+                                                forms=[b for b in self._browser.forms()]
 		except Exception, e :
 			raise e
 		
