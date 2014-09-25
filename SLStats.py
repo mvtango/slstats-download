@@ -26,15 +26,19 @@ class SLStats(object) :
 				return
 			else :
 				r=self._browser.open("https://client.scribblelive.com/")
-				if len([b for b in self._browser.forms()])>0 :
+                                already_submitted={}
+                                forms=[b for b in self._browser.forms()]
+				if len(b)>0 :
 					self._browser.select_form(nr=0)
 					self._browser["ctl00$PageInfo$Email"]=self._credentials["user"]
 					self._browser["ctl00$PageInfo$Password"]=self._credentials["password"]
+                                        already_submitted[b[0].action]=True
 					self._browser.submit()
                                         forms=[b for b in self._browser.forms()]
-					while len(forms)>0 :
-                                                print "Currently at {}, submitting Form 0 {}".format(self._browser.geturl(),forms[0].action)
+					while len(forms)>0 and (forms[0] not in already_submitted) :
+                                                # print "Currently at {}, submitting Form 0 {}".format(self._browser.geturl(),forms[0].action)
 						self._browser.select_form(nr=0)
+                                                already_submitted[b[0].action]=True
 						self._browser.submit()
 						self._lastlogin=datetime.datetime.now()
                                                 forms=[b for b in self._browser.forms()]
