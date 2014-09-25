@@ -20,7 +20,7 @@ class SLStats(object) :
 	_lastlogin=0
 	
 	def login(self) :
-		try :
+		#try :
 			if (self._lastlogin!=0) and (datetime.datetime.now()-self._lastlogin).seconds<30 :
 				self._lastlogin=datetime.datetime.now()
 				return
@@ -28,22 +28,22 @@ class SLStats(object) :
 				r=self._browser.open("https://client.scribblelive.com/")
                                 already_submitted={}
                                 forms=[b for b in self._browser.forms()]
-				if len(b)>0 :
+				if len(forms)>0 :
 					self._browser.select_form(nr=0)
 					self._browser["ctl00$PageInfo$Email"]=self._credentials["user"]
 					self._browser["ctl00$PageInfo$Password"]=self._credentials["password"]
-                                        already_submitted[b[0].action]=True
+                                        already_submitted[forms[0].action]=True
 					self._browser.submit()
                                         forms=[b for b in self._browser.forms()]
 					while len(forms)>0 and (forms[0] not in already_submitted) :
                                                 # print "Currently at {}, submitting Form 0 {}".format(self._browser.geturl(),forms[0].action)
 						self._browser.select_form(nr=0)
-                                                already_submitted[b[0].action]=True
+                                                already_submitted[forms[0].action]=True
 						self._browser.submit()
 						self._lastlogin=datetime.datetime.now()
                                                 forms=[b for b in self._browser.forms()]
-		except Exception, e :
-			raise e
+		#except Exception, e :
+		#	raise e
 		
 	
 	def __init__(self,**kwargs) :
